@@ -1,3 +1,4 @@
+
 import scrapy 
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.log import configure_logging
@@ -8,6 +9,7 @@ from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import time
+
 
 
 class BookingSpider(scrapy.Spider):
@@ -76,23 +78,42 @@ descr_list = []
 ratings_list = []
 links_list = []
 
-configure_logging({'LOG_ENABLED': False})
-process = CrawlerProcess(settings={
-        'LOG_LEVEL': 'ERROR',
-        'USER_AGENT': 'Chrome/97.0'
-    })
 
-def get_data_by_city(city : str , n_page : int) -> pd.DataFrame:
+
+
+def get_data_by_city(n_page : int , df_to_concat = pd.DataFrame(columns=['City' , 'name_hotel' , 'Loc' , 'Description' , 'Rating' , 'Link'])) -> pd.DataFrame:
     '''city : the city to get a hotel dataframe for
         n_page : number of page to scrape on booking.com'''
     
-    process.crawl(BookingSpider , start_url=f'https://www.booking.com/searchresults.fr.html?label=gen173nr-1FCAEoggI46AdIDVgEaE2IAQGYAQ24ARfIAQzYAQHoAQH4AQKIAgGoAgO4AvuylaEGwAIB0gIkMjBiZDJlZWUtZjY0ZC00OWVlLWExZGQtMWQzN2NhYTA1NDA52AIF4AIB&aid=304142&ss={city}&ssne={city}&ssne_untouched={city}&lang=fr&sb=1&src_elem=sb&src=index&dest_id=-1456928&dest_type=city&group_adults=2&no_rooms=1&group_children=0&sb_travel_purpose=leisure&offset=200',
-                n_next_page_to_scrape=n_page)
-    
-    process.start()
 
-    assert len(loc_list) == len(name_list) == len(descr_list) == len(ratings_list) == len(links_list)
+    configure_logging({'LOG_ENABLED': False})
+    process = CrawlerProcess(settings={
+    'LOG_LEVEL': 'ERROR',
+    'USER_AGENT': 'Chrome/97.0'
+    })
 
-    return pd.DataFrame({'city' : [city for i in range(len(loc_list))] , 'name_hotel' : name_list , 'Loc' : loc_list ,
+
+
+    for city in list(pd.read_csv('df_with_weather.csv')['City']):
+
+
+
+        process.crawl(BookingSpider , start_url=f'https://www.booking.com/searchresults.fr.html?label=gen173nr-1FCAEoggI46AdIDVgEaE2IAQGYAQ24ARfIAQzYAQHoAQH4AQKIAgGoAgO4AvuylaEGwAIB0gIkMjBiZDJlZWUtZjY0ZC00OWVlLWExZGQtMWQzN2NhYTA1NDA52AIF4AIB&aid=304142&ss={city}&ssne={city}&ssne_untouched={city}&lang=fr&sb=1&src_elem=sb&src=index&dest_id=-1456928&dest_type=city&group_adults=2&no_rooms=1&group_children=0&sb_travel_purpose=leisure&offset=200',
+                    n_next_page_to_scrape=n_page)
+        
+        process.start()
+        process.stop()
+
+        assert len(loc_list) == len(name_list) == len(descr_list) == len(ratings_list) == len(links_list)
+
+        df = pd.DataFrame({'City' : [city for i in range(len(loc_list))] , 'name_hotel' : name_list , 'Loc' : loc_list ,
                          'Description' : descr_list , 'Rating' : ratings_list , 'Link' : links_list})
+        
+        df_to_concat = pd.concat([df_to_concat , df])
 
+
+    return df_to_concat
+
+
+df = get_data_by_city(n_page=0)
+df.to_csv('df_scraping.csv')
