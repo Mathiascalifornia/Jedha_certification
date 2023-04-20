@@ -1,0 +1,16 @@
+To read the documentation of my api :
+https://getaroundapi.herokuapp.com/docs
+
+To query the api :
+https://getaroundapi.herokuapp.com/predict # Add the params
+
+Or with python :
+import requests
+
+params = {'observations' : [{'model_key' : 'Citroën' , 'mileage' : 140411 , 'engine_power' : 100 , 'fuel' : 'diesel' , 'paint_color' : 'black' , 'car_type' : 'convertible' , 'private_parking_available' : True , 'has_gps' : True , 'has_air_conditioning' : True , 'automatic_car' : False , 'has_getaround_connect' : True , 'has_speed_regulator' : True , 'winter_tires' : True}]}
+
+url = 'https://getaroundapi.herokuapp.com/predict'
+
+response = requests.post(url=url , json=params)
+
+print(response.json())
